@@ -6,3 +6,4 @@
 - time +/- a few mins
 - external data
   - completing movie names...?
+- remove misclassified points
