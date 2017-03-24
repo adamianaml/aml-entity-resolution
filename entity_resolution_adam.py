@@ -59,13 +59,12 @@ rt.columns = [
 
 # ### Merge records from ama and rt
 
-# In[449]:
+# In[726]:
 
 def create_features(dataset):
     new_data = pd.DataFrame(dtype=str)
     
     for index, row in dataset.iterrows():
-
         amarow = ama[ama['id_left'] == row['id1']]
         rtrow = rt[rt['id_right'] == row['id 2']]
 
@@ -87,8 +86,8 @@ def create_features(dataset):
 
     new_data['time_norm_left'] = new_data['time_left'].apply(compute_time_norm)
     new_data['time_norm_right'] = new_data['time_right'].apply(compute_time_norm)
-    new_data['time_same'] = (new_data['time_norm_left'] == new_data['time_norm_right']).astype(int)
-    new_data['time_diff'] = (new_data['time_norm_left'].astype(int) - new_data['time_norm_right'].astype(int))
+    new_data['time_same'] = (new_data['time_norm_left'].astype(int) == new_data['time_norm_right'].astype(int)).astype(int)
+    new_data['time_diff'] = (new_data['time_norm_left'].astype(int) - new_data['time_norm_right'].astype(int)).astype(int)
     
     # Compute actors columns
     actors_split = new_data['star_left'].str.split(', ', expand=True)
@@ -101,6 +100,28 @@ def create_features(dataset):
     new_data['num_match_stars'] = new_data[cols].apply(compute_number_stars_match, axis = 1)
     
     return new_data
+
+
+# In[725]:
+
+train_data_copy = create_features(train)
+
+actors_split = train_data_copy['star_left'].str.split(', ', expand=True)
+actors_split_columns = ['star_' + str(i) for i in range(len(actors_split.columns))]
+actors_split.columns = actors_split_columns
+train_data_copy = pd.concat([train_data_copy, actors_split], axis=1)
+
+
+# In[724]:
+
+def compute_number_stars_match(row):
+    actors_left = ['star_0', 'star_1']
+    actors_right = ['star1_right', 'star2_right', 'star3_right', 'star4_right', 'star5_right', 'star6_right']
+    list_left = row.loc[actors_left].tolist()
+    list_right = row.loc[actors_right].tolist()
+    x = len(np.intersect1d(list_left, list_right))
+    
+    return x
 
 
 # In[434]:
@@ -117,20 +138,11 @@ def compute_time_norm(row):
         return temp[0]
 
 
-# In[435]:
-
-def compute_number_stars_match(row):
-    list_left = row[:5].tolist()
-    list_right = row[5:].tolist()
-    x = len(np.intersect1d(list_left, list_right))
-    return x
-
-
 # ### Predict with train
 
-# In[511]:
+# In[743]:
 
-features_cols = ['time_same'] + ['directors_same'] + ['num_match_stars']
+features_cols = ['time_diff'] + ['directors_same'] + ['num_match_stars']
 
 train_data = create_features(train)
 
@@ -150,31 +162,27 @@ clf.fit(x_train, y_train)
 clf.score(x_test, y_test)
 
 
-# In[513]:
+# In[744]:
 
 time_cols = ['time_left', 'time_right', 'time_same', 'time_diff', 'time_norm_left', 'time_norm_right']
 
 
-# In[ ]:
+# In[745]:
 
-# Find missed predictions
+clf = RandomForestClassifier()
+clf.fit(train_data[features_cols], train_data['gold'])
 
-preds = clf.predict(test)
+preds = clf.predict(train_data[features_cols])
 
-errors = preds - y_test.as_matrix()
-error_inds = np.nonzero(errors)
-
-error_rows = new_data.copy().as_matrix()[error_inds]
-error_rows = pd.DataFrame(error_rows)
-error_rows.columns = new_data.columns
-
-error_preds = pd.DataFrame(preds[error_inds], columns=['pred'])
-w_preds = pd.concat([error_rows, error_preds], axis=1)
+# Missed preds:
+errors = preds - train_data['gold']
+error_ind = np.nonzero(errors)[0]
+train_data.iloc[error_ind]
 
 
 # ### Predict with test
 
-# In[515]:
+# In[746]:
 
 features_cols = ['time_same'] + ['directors_same'] + ['num_match_stars']
 test_data = create_features(test)
@@ -184,7 +192,7 @@ clf.fit(train_data[features_cols], train_data['gold'])
 test_preds = clf.predict(test_data[features_cols])
 
 
-# In[516]:
+# In[747]:
 
 test_preds = pd.DataFrame(test_preds)
 test_preds.columns = ['gold']
@@ -193,7 +201,7 @@ test_preds.to_csv('test_gold.csv', index=False)
 
 # ### Predict with Holdout
 
-# In[517]:
+# In[748]:
 
 features_cols = ['time_same'] + ['directors_same'] + ['num_match_stars']
 holdout_data = create_features(holdout)
@@ -203,7 +211,7 @@ clf.fit(train_data[features_cols], train_data['gold'])
 holdout_preds = clf.predict(holdout_data[features_cols])
 
 
-# In[518]:
+# In[749]:
 
 holdout_preds = pd.DataFrame(holdout_preds)
 holdout_preds.columns = ['gold']
