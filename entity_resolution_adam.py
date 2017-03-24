@@ -155,9 +155,9 @@ def compute_time_norm(row):
 
 # ### Predict with train
 
-# In[936]:
+# In[981]:
 
-features_cols = ['time_diff', 'directors_same', 'num_match_stars', 'percent_match_stars']
+features_cols = ['time_diff', 'directors_same', 'num_match_stars', 'percent_match_stars', 'year_right', 'rotten_tomatoes_right', 'audience_rating_right']
 
 train_data = create_features(train)
 
@@ -177,7 +177,7 @@ clf.fit(x_train, y_train)
 clf.score(x_test, y_test)
 
 
-# In[937]:
+# In[968]:
 
 clf = GradientBoostingClassifier(n_estimators=200)
 clf.fit(x_train, y_train)
@@ -187,8 +187,9 @@ preds = clf.predict(x_test)
 errors = preds - y_test
 error_ind = np.nonzero(errors)[0]
 
-print(preds[error_ind])
-print(y_test.as_matrix()[error_ind])
+print("Error inds: " + str(error_ind))
+print("Preds: " + str(preds[error_ind]))
+print("Labels: " + str(y_test.as_matrix()[error_ind]))
 
 rel_cols = ['director_left', 'time_right', 'directors_same', 'time_same', 'time_diff', 'num_match_stars', 'gold']
 x_test.iloc[error_ind]
@@ -199,9 +200,8 @@ x_test.iloc[error_ind]
 
 # ### Predict with test
 
-# In[938]:
+# In[969]:
 
-features_cols = ['time_same', 'directors_same', 'num_match_stars', 'percent_match_stars']
 test_data = create_features(test)
 
 clf = GradientBoostingClassifier(min_samples_split=10)
@@ -209,7 +209,7 @@ clf.fit(train_data[features_cols], train_data['gold'])
 test_preds = clf.predict(test_data[features_cols])
 
 
-# In[939]:
+# In[970]:
 
 test_preds = pd.DataFrame(test_preds)
 test_preds.columns = ['gold']
@@ -218,9 +218,8 @@ test_preds.to_csv('test_gold.csv', index=False)
 
 # ### Predict with Holdout
 
-# In[940]:
+# In[971]:
 
-features_cols = ['time_same', 'directors_same', 'num_match_stars', 'percent_match_stars']
 holdout_data = create_features(holdout)
 
 clf = GradientBoostingClassifier(min_samples_split=10)
@@ -228,7 +227,7 @@ clf.fit(train_data[features_cols], train_data['gold'])
 holdout_preds = clf.predict(holdout_data[features_cols])
 
 
-# In[941]:
+# In[972]:
 
 holdout_preds = pd.DataFrame(holdout_preds)
 holdout_preds.columns = ['gold']
