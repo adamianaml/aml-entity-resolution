@@ -1,0 +1,41 @@
+,r,features,remove_bd,clf,scores
+0,2,"('time_same_2', 'time_diff_abs')",True,RandomForestClassifier,0.886507936508
+1,2,"('time_same_2', 'time_diff_abs')",True,GradientBoostingClassifier,0.984126984127
+2,2,"('time_same_2', 'time_diff_abs')",False,RandomForestClassifier,0.936507936508
+3,2,"('time_same_2', 'time_diff_abs')",False,GradientBoostingClassifier,0.950793650794
+4,2,"('time_same_2', 'num_match_stars')",True,RandomForestClassifier,0.934920634921
+5,2,"('time_same_2', 'num_match_stars')",True,GradientBoostingClassifier,0.983333333333
+6,2,"('time_same_2', 'num_match_stars')",False,RandomForestClassifier,1.0
+7,2,"('time_same_2', 'num_match_stars')",False,GradientBoostingClassifier,0.933333333333
+8,2,"('time_same_2', 'percent_match_stars')",True,RandomForestClassifier,0.934920634921
+9,2,"('time_same_2', 'percent_match_stars')",True,GradientBoostingClassifier,0.968253968254
+10,2,"('time_same_2', 'percent_match_stars')",False,RandomForestClassifier,0.934920634921
+11,2,"('time_same_2', 'percent_match_stars')",False,GradientBoostingClassifier,0.983333333333
+12,2,"('time_diff_abs', 'num_match_stars')",True,RandomForestClassifier,1.0
+13,2,"('time_diff_abs', 'num_match_stars')",True,GradientBoostingClassifier,0.950710108605
+14,2,"('time_diff_abs', 'num_match_stars')",False,RandomForestClassifier,0.934920634921
+15,2,"('time_diff_abs', 'num_match_stars')",False,GradientBoostingClassifier,0.983333333333
+16,2,"('time_diff_abs', 'percent_match_stars')",True,RandomForestClassifier,0.96746031746
+17,2,"('time_diff_abs', 'percent_match_stars')",True,GradientBoostingClassifier,0.968253968254
+18,2,"('time_diff_abs', 'percent_match_stars')",False,RandomForestClassifier,0.952380952381
+19,2,"('time_diff_abs', 'percent_match_stars')",False,GradientBoostingClassifier,0.983333333333
+20,2,"('num_match_stars', 'percent_match_stars')",True,RandomForestClassifier,0.950793650794
+21,2,"('num_match_stars', 'percent_match_stars')",True,GradientBoostingClassifier,0.934126984127
+22,2,"('num_match_stars', 'percent_match_stars')",False,RandomForestClassifier,0.884920634921
+23,2,"('num_match_stars', 'percent_match_stars')",False,GradientBoostingClassifier,0.952380952381
+24,3,"('time_same_2', 'time_diff_abs', 'num_match_stars')",True,RandomForestClassifier,0.983333333333
+25,3,"('time_same_2', 'time_diff_abs', 'num_match_stars')",True,GradientBoostingClassifier,0.966583124478
+26,3,"('time_same_2', 'time_diff_abs', 'num_match_stars')",False,RandomForestClassifier,0.934126984127
+27,3,"('time_same_2', 'time_diff_abs', 'num_match_stars')",False,GradientBoostingClassifier,0.918964076859
+28,3,"('time_same_2', 'time_diff_abs', 'percent_match_stars')",True,RandomForestClassifier,0.966666666667
+29,3,"('time_same_2', 'time_diff_abs', 'percent_match_stars')",True,GradientBoostingClassifier,0.934920634921
+30,3,"('time_same_2', 'time_diff_abs', 'percent_match_stars')",False,RandomForestClassifier,0.918964076859
+31,3,"('time_same_2', 'time_diff_abs', 'percent_match_stars')",False,GradientBoostingClassifier,0.919047619048
+32,3,"('time_same_2', 'num_match_stars', 'percent_match_stars')",True,RandomForestClassifier,0.950793650794
+33,3,"('time_same_2', 'num_match_stars', 'percent_match_stars')",True,GradientBoostingClassifier,0.900793650794
+34,3,"('time_same_2', 'num_match_stars', 'percent_match_stars')",False,RandomForestClassifier,0.950793650794
+35,3,"('time_same_2', 'num_match_stars', 'percent_match_stars')",False,GradientBoostingClassifier,0.933166248956
+36,3,"('time_diff_abs', 'num_match_stars', 'percent_match_stars')",True,RandomForestClassifier,0.952380952381
+37,3,"('time_diff_abs', 'num_match_stars', 'percent_match_stars')",True,GradientBoostingClassifier,0.919841269841
+38,3,"('time_diff_abs', 'num_match_stars', 'percent_match_stars')",False,RandomForestClassifier,0.968253968254
+39,3,"('time_diff_abs', 'num_match_stars', 'percent_match_stars')",False,GradientBoostingClassifier,0.918964076859
