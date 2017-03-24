@@ -14,8 +14,8 @@ from sklearn.ensemble import RandomForestClassifier
 
 np.random.seed(42)
 
-ama = pd.read_csv('./data/amazon.csv')
-rt = pd.read_csv('./data/rotten_tomatoes.csv')
+ama = pd.read_csv('./amazon.csv')
+rt = pd.read_csv('./rotten_tomatoes.csv')
 
 holdout = pd.read_csv('./holdout.csv')
 test = pd.read_csv('./test.csv')
