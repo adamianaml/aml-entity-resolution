@@ -57,9 +57,9 @@ rt.columns = [
 ]
 
 
-# ### Merge records from ama and rt
+# ### Merge Ama + Rt and Create Features
 
-# In[928]:
+# In[1018]:
 
 def create_features(dataset):
     new_data = pd.DataFrame(dtype=str)
@@ -86,7 +86,9 @@ def create_features(dataset):
     new_data['time_norm_left'] = new_data['time_left'].apply(compute_time_norm)
     new_data['time_norm_right'] = new_data['time_right'].apply(compute_time_norm)
     new_data['time_same'] = (new_data['time_norm_left'].astype(int) == new_data['time_norm_right'].astype(int)).astype(int)
+    new_data['time_same_2'] = (abs((new_data['time_norm_left'].astype(int) - new_data['time_norm_right'].astype(int)).astype(int)) <= 3).astype(int)
     new_data['time_diff'] = (new_data['time_norm_left'].astype(int) - new_data['time_norm_right'].astype(int)).astype(int)
+    new_data['time_diff_abs'] = abs(new_data['time_diff']).astype(int)
     
     # Compute actors columns
     actors_split = new_data['star_left'].str.split(', ', expand=True)
@@ -153,22 +155,44 @@ def compute_time_norm(row):
         return temp[0]
 
 
+# In[1001]:
+
+def remove_bad_samples(data):
+    
+    train.reset_index(drop=True, inplace=True)
+    data.reset_index(drop=True, inplace=True)
+    data = pd.concat([data, train], axis=1)
+    
+    # Remove bad training rows
+    data = data[data['id_left'] != 199]
+    data = data[data['id_left'] != 680]
+    data = data[data['id_left'] != 487]
+    data = data[data['id_left'] != 756]
+    data = data[data['id_left'] != 770]
+    data = data[data['id_left'] != 1701]
+    
+    return data
+
+
 # ### Predict with train
 
-# In[981]:
+# In[1030]:
 
-features_cols = ['time_diff', 'directors_same', 'num_match_stars', 'percent_match_stars', 'year_right', 'rotten_tomatoes_right', 'audience_rating_right']
+features_cols = [
+#     'time_diff',
+#     'time_same',
+    'time_same_2',
+    'time_diff_abs',
+    'directors_same',
+    'num_match_stars',
+    'percent_match_stars',
+#     'year_right',
+#     'rotten_tomatoes_right',
+#     'audience_rating_right'
+]
 
 train_data = create_features(train)
-
-train.reset_index(drop=True, inplace=True)
-train_data.reset_index(drop=True, inplace=True)
-
-train_data = pd.concat([train_data, train], axis=1) #, how='inner')
-
-# Remove bad training rows
-train_data = train_data[train_data['id_left'] != 199]
-train_data = train_data[train_data['id_left'] != 680]
+train_data = remove_bad_samples(train_data)
 
 x_train, x_test, y_train, y_test = train_test_split(train_data[features_cols], train_data['gold'])
 
@@ -177,7 +201,7 @@ clf.fit(x_train, y_train)
 clf.score(x_test, y_test)
 
 
-# In[968]:
+# In[1031]:
 
 clf = GradientBoostingClassifier(n_estimators=200)
 clf.fit(x_train, y_train)
@@ -200,8 +224,10 @@ x_test.iloc[error_ind]
 
 # ### Predict with test
 
-# In[969]:
+# In[1032]:
 
+train_data = create_features(train)
+train_data = remove_bad_samples(train_data)
 test_data = create_features(test)
 
 clf = GradientBoostingClassifier(min_samples_split=10)
@@ -209,7 +235,7 @@ clf.fit(train_data[features_cols], train_data['gold'])
 test_preds = clf.predict(test_data[features_cols])
 
 
-# In[970]:
+# In[1033]:
 
 test_preds = pd.DataFrame(test_preds)
 test_preds.columns = ['gold']
@@ -218,8 +244,10 @@ test_preds.to_csv('test_gold.csv', index=False)
 
 # ### Predict with Holdout
 
-# In[971]:
+# In[1034]:
 
+train_data = create_features(train)
+train_data = remove_bad_samples(train_data)
 holdout_data = create_features(holdout)
 
 clf = GradientBoostingClassifier(min_samples_split=10)
@@ -227,7 +255,7 @@ clf.fit(train_data[features_cols], train_data['gold'])
 holdout_preds = clf.predict(holdout_data[features_cols])
 
 
-# In[972]:
+# In[1035]:
 
 holdout_preds = pd.DataFrame(holdout_preds)
 holdout_preds.columns = ['gold']
