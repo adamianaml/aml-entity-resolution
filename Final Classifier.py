@@ -4,6 +4,7 @@
 # # Amazon and Rotten Tomatoes Entity Resolution
 # ### Adam Coviensky (ac4092), Ian Johnson (icj2103)
 # ### Instabase submission: icj2103
+# ### GitHub repo: https://github.com/adamianaml/aml-entity-resolution
 
 # Our entity resolution technique involved joining the Amazon and Rotten Tomatoes databases for the ID’s listed in the training set. We then matched the schemas for the features contained in both of the datasets and created new features from these. These features included the absolute value of the difference in time. Boolean features indicating whether or not the directors of the two movies are the same, the runtimes are the same, and whether or not the runtimes are the same within some range (we used 3 minutes). We then created features for the number of matching actors and for the percentage of matching actors. Finally, we performed cross-validation with a customized gridsearch using the training set to determine which features we should be keeping in our final model and which classifier to use between a decision tree, a random forest, and the gradient boosting classifier.
 #  

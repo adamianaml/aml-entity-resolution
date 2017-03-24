@@ -6,16 +6,24 @@ from sklearn.cross_validation import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 
 
-# Load Data
+# Amazon and Rotten Tomatoes Entity Resolution
+### Adam Coviensky (ac4092), Ian Johnson (icj2103)
+### Instabase submission: icj2103
+### GitHub repo: https://github.com/adamianaml/aml-entity-resolution
+
+
+np.random.seed(42)
+
 ama = pd.read_csv('./data/amazon.csv')
 rt = pd.read_csv('./data/rotten_tomatoes.csv')
 
-holdout = pd.read_csv('./data/holdout.csv')
-test = pd.read_csv('./data/test.csv')
-train = pd.read_csv('./data/train.csv')
+holdout = pd.read_csv('./holdout.csv')
+test = pd.read_csv('./test.csv')
+train = pd.read_csv('./train.csv')
 
 
-# Define Columns
+### Define Columns
+
 ama.columns = [
     'id_left',
     'time_left',
@@ -45,7 +53,8 @@ rt.columns = [
 ]
 
 
-# Feature Creation
+### Feature Creation Function
+
 def create_features(dataset):
     new_data = pd.DataFrame(dtype=str)
 
@@ -92,7 +101,8 @@ def create_features(dataset):
     return new_data
 
 
-# Helper Functions
+### Helper Feature Creation Functions
+
 def compute_number_stars_match(row):
     actors_left = ['star_0', 'star_1', 'star_2', 'star_3', 'star_4']
     actors_right = ['star1_right', 'star2_right', 'star3_right', 'star4_right', 'star5_right', 'star6_right']
@@ -152,44 +162,64 @@ def remove_bad_samples(data):
     return data
 
 
+### Predict With Training Data
 
+features_cols = [
+    'time_same_2',
+    'directors_same',
+    'num_match_stars',
+    'percent_match_stars',
+]
 
-if __name__ == '__main__':
+train_data = create_features(train)
+train_data = remove_bad_samples(train_data)
 
-	features_cols = [
-		'time_same_2',
-		'directors_same',
-		'num_match_stars',
-		'percent_match_stars',
-	]
+x_train, x_test, y_train, y_test = train_test_split(train_data[features_cols], train_data['gold'], random_state=10)
 
-	# Test Predictions
-	train_data = create_features(train)
-	train_data = remove_bad_samples(train_data)
-	test_data = create_features(test)
+clf = RandomForestClassifier(random_state=42)
+clf.fit(x_train, y_train)
+scores = clf.score(x_test, y_test)
 
-	clf = RandomForestClassifier()
-	clf.fit(train_data[features_cols], train_data['gold'])
-	test_preds = clf.predict(test_data[features_cols])
+preds = clf.predict(x_test)
 
-	test_preds = pd.DataFrame(test_preds)
-	test_preds.columns = ['gold']
-	test_preds.to_csv('test_gold.csv', index=False)
+# F1 score:
+from sklearn.metrics import classification_report
+print(classification_report(y_test, preds))
 
-
-	# Holdout Predictions
-	train_data = create_features(train)
-	train_data = remove_bad_samples(train_data)
-	holdout_data = create_features(holdout)
-
-	clf = RandomForestClassifier()
-	clf.fit(train_data[features_cols], train_data['gold'])
-	holdout_preds = clf.predict(holdout_data[features_cols])
-
-	holdout_preds = pd.DataFrame(holdout_preds)
-	holdout_preds.columns = ['gold']
-	holdout_preds.to_csv('holdout_gold.csv', index=False)
+features_cols = [
+    'time_same_2',
+    'directors_same',
+    'num_match_stars',
+    'percent_match_stars',
+]
 
 
 
+### Final Predictions
 
+# Test Predictions
+train_data = create_features(train)
+train_data = remove_bad_samples(train_data)
+test_data = create_features(test)
+
+clf = RandomForestClassifier()
+clf.fit(train_data[features_cols], train_data['gold'])
+test_preds = clf.predict(test_data[features_cols])
+
+test_preds = pd.DataFrame(test_preds)
+test_preds.columns = ['gold']
+test_preds.to_csv('test_gold.csv', index=False)
+
+
+# Holdout Predictions
+train_data = create_features(train)
+train_data = remove_bad_samples(train_data)
+holdout_data = create_features(holdout)
+
+clf = RandomForestClassifier()
+clf.fit(train_data[features_cols], train_data['gold'])
+holdout_preds = clf.predict(holdout_data[features_cols])
+
+holdout_preds = pd.DataFrame(holdout_preds)
+holdout_preds.columns = ['gold']
+holdout_preds.to_csv('holdout_gold.csv', index=False)
