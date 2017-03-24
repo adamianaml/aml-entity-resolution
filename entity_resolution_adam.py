@@ -59,7 +59,7 @@ rt.columns = [
 
 # ### Merge records from ama and rt
 
-# In[897]:
+# In[928]:
 
 def create_features(dataset):
     new_data = pd.DataFrame(dtype=str)
@@ -90,36 +90,56 @@ def create_features(dataset):
     
     # Compute actors columns
     actors_split = new_data['star_left'].str.split(', ', expand=True)
-    actors_split_columns = ['star_' + str(i) for i in range(len(actors_split.columns))]
-    actors_split.columns = actors_split_columns
+    for i in range(6 - actors_split.shape[1]):
+        actors_split[str(i)] = ""
+    actors_split.columns = ['star_' + str(i) for i in range(6)]
     new_data = pd.concat([new_data, actors_split], axis=1)
     
-    # Todo - fix for > 2 stars_left
+    # Number actors match
     cols = list(new_data.loc[:,'star_0':'star_4']) + list(new_data.loc[:,'star1_right':'star6_right'])
     new_data['num_match_stars'] = new_data[cols].apply(compute_number_stars_match, axis = 1)
+    
+    # Percent actors match
+    new_data['percent_match_stars'] = new_data[cols].apply(compute_percent_stars_match, axis = 1)
     
     return new_data
 
 
-# In[881]:
+# In[929]:
 
 def compute_number_stars_match(row):
     actors_left = ['star_0', 'star_1', 'star_2', 'star_3', 'star_4']
     actors_right = ['star1_right', 'star2_right', 'star3_right', 'star4_right', 'star5_right', 'star6_right']
     list_left = row.loc[actors_left].tolist()
     list_right = row.loc[actors_right].tolist()
-    x = len(np.intersect1d(list_left, list_right))
     
-    return x
+    # Avoid matching nulls
+    list_left = filter(None, list_left)
+    list_right = filter(None, list_right)
+    
+    return len(np.intersect1d(list_left, list_right))
 
 
-# In[902]:
+# In[930]:
+
+def compute_percent_stars_match(row):
+    actors_left = ['star_0', 'star_1', 'star_2', 'star_3', 'star_4']
+    actors_right = ['star1_right', 'star2_right', 'star3_right', 'star4_right', 'star5_right', 'star6_right']
+    list_left = row.loc[actors_left].tolist()
+    list_left = filter(None, list_left)
+    list_right = row.loc[actors_right].tolist()
+    x = float(len(np.intersect1d(list_left, list_right)))
+    ama_num = len(list_left)
+    return x / ama_num
+
+
+# In[904]:
 
 regex = re.compile(r'[0-9]*')
 
 def compute_time_norm(row):
     row = str(row)
-    print(row)
+    
     if '/' in row:
         # Invalid time entry
         print(row)
@@ -135,9 +155,9 @@ def compute_time_norm(row):
 
 # ### Predict with train
 
-# In[903]:
+# In[936]:
 
-features_cols = ['time_diff', 'directors_same', 'num_match_stars']
+features_cols = ['time_diff', 'directors_same', 'num_match_stars', 'percent_match_stars']
 
 train_data = create_features(train)
 
@@ -157,7 +177,7 @@ clf.fit(x_train, y_train)
 clf.score(x_test, y_test)
 
 
-# In[879]:
+# In[937]:
 
 clf = GradientBoostingClassifier(n_estimators=200)
 clf.fit(x_train, y_train)
@@ -179,9 +199,9 @@ x_test.iloc[error_ind]
 
 # ### Predict with test
 
-# In[768]:
+# In[938]:
 
-features_cols = ['time_same'] + ['directors_same'] + ['num_match_stars']
+features_cols = ['time_same', 'directors_same', 'num_match_stars', 'percent_match_stars']
 test_data = create_features(test)
 
 clf = GradientBoostingClassifier(min_samples_split=10)
@@ -189,7 +209,7 @@ clf.fit(train_data[features_cols], train_data['gold'])
 test_preds = clf.predict(test_data[features_cols])
 
 
-# In[769]:
+# In[939]:
 
 test_preds = pd.DataFrame(test_preds)
 test_preds.columns = ['gold']
@@ -198,9 +218,9 @@ test_preds.to_csv('test_gold.csv', index=False)
 
 # ### Predict with Holdout
 
-# In[770]:
+# In[940]:
 
-features_cols = ['time_same'] + ['directors_same'] + ['num_match_stars']
+features_cols = ['time_same', 'directors_same', 'num_match_stars', 'percent_match_stars']
 holdout_data = create_features(holdout)
 
 clf = GradientBoostingClassifier(min_samples_split=10)
@@ -208,7 +228,7 @@ clf.fit(train_data[features_cols], train_data['gold'])
 holdout_preds = clf.predict(holdout_data[features_cols])
 
 
-# In[771]:
+# In[941]:
 
 holdout_preds = pd.DataFrame(holdout_preds)
 holdout_preds.columns = ['gold']
