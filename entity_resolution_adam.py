@@ -59,7 +59,7 @@ rt.columns = [
 
 # ### Merge records from ama and rt
 
-# In[861]:
+# In[897]:
 
 def create_features(dataset):
     new_data = pd.DataFrame(dtype=str)
@@ -83,7 +83,6 @@ def create_features(dataset):
     # Compute time columns
     new_data['time_left'] = new_data['time_left'].astype(str)
     new_data['time_right'] = new_data['time_right'].astype(str)
-
     new_data['time_norm_left'] = new_data['time_left'].apply(compute_time_norm)
     new_data['time_norm_right'] = new_data['time_right'].apply(compute_time_norm)
     new_data['time_same'] = (new_data['time_norm_left'].astype(int) == new_data['time_norm_right'].astype(int)).astype(int)
@@ -102,17 +101,7 @@ def create_features(dataset):
     return new_data
 
 
-# In[862]:
-
-train_data_copy = create_features(train)
-
-actors_split = train_data_copy['star_left'].str.split(', ', expand=True)
-actors_split_columns = ['star_' + str(i) for i in range(len(actors_split.columns))]
-actors_split.columns = actors_split_columns
-train_data_copy = pd.concat([train_data_copy, actors_split], axis=1)
-
-
-# In[863]:
+# In[881]:
 
 def compute_number_stars_match(row):
     actors_left = ['star_0', 'star_1', 'star_2', 'star_3', 'star_4']
@@ -124,12 +113,18 @@ def compute_number_stars_match(row):
     return x
 
 
-# In[864]:
+# In[902]:
 
 regex = re.compile(r'[0-9]*')
 
 def compute_time_norm(row):
     row = str(row)
+    print(row)
+    if '/' in row:
+        # Invalid time entry
+        print(row)
+        return 0
+    
     match = regex.findall(row)
     temp = filter(None, match)
     if len(temp) == 2:
@@ -140,7 +135,7 @@ def compute_time_norm(row):
 
 # ### Predict with train
 
-# In[850]:
+# In[903]:
 
 features_cols = ['time_diff', 'directors_same', 'num_match_stars']
 
@@ -162,12 +157,7 @@ clf.fit(x_train, y_train)
 clf.score(x_test, y_test)
 
 
-# In[857]:
-
-
-
-
-# In[855]:
+# In[879]:
 
 clf = GradientBoostingClassifier(n_estimators=200)
 clf.fit(x_train, y_train)
