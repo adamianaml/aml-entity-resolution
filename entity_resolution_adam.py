@@ -1,14 +1,14 @@
 
 # coding: utf-8
 
-# In[330]:
+# In[843]:
 
 import re
 import pandas as pd
 import numpy as np
 
 from sklearn.cross_validation import train_test_split
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.tree import DecisionTreeClassifier
 
 pd.options.display.max_columns = 999
@@ -16,7 +16,7 @@ pd.options.display.max_columns = 999
 
 # ### Load Data
 
-# In[431]:
+# In[844]:
 
 ama = pd.read_csv('./data/amazon.csv')
 rt = pd.read_csv('./data/rotten_tomatoes.csv')
@@ -26,7 +26,7 @@ test = pd.read_csv('./data/test.csv')
 train = pd.read_csv('./data/train.csv')
 
 
-# In[432]:
+# In[845]:
 
 ama.columns = [
     'id_left',
@@ -59,7 +59,7 @@ rt.columns = [
 
 # ### Merge records from ama and rt
 
-# In[726]:
+# In[861]:
 
 def create_features(dataset):
     new_data = pd.DataFrame(dtype=str)
@@ -96,13 +96,13 @@ def create_features(dataset):
     new_data = pd.concat([new_data, actors_split], axis=1)
     
     # Todo - fix for > 2 stars_left
-    cols = list(new_data.loc[:,'star_0':'star_1']) + list(new_data.loc[:,'star1_right':'star6_right'])
+    cols = list(new_data.loc[:,'star_0':'star_4']) + list(new_data.loc[:,'star1_right':'star6_right'])
     new_data['num_match_stars'] = new_data[cols].apply(compute_number_stars_match, axis = 1)
     
     return new_data
 
 
-# In[725]:
+# In[862]:
 
 train_data_copy = create_features(train)
 
@@ -112,10 +112,10 @@ actors_split.columns = actors_split_columns
 train_data_copy = pd.concat([train_data_copy, actors_split], axis=1)
 
 
-# In[724]:
+# In[863]:
 
 def compute_number_stars_match(row):
-    actors_left = ['star_0', 'star_1']
+    actors_left = ['star_0', 'star_1', 'star_2', 'star_3', 'star_4']
     actors_right = ['star1_right', 'star2_right', 'star3_right', 'star4_right', 'star5_right', 'star6_right']
     list_left = row.loc[actors_left].tolist()
     list_right = row.loc[actors_right].tolist()
@@ -124,7 +124,7 @@ def compute_number_stars_match(row):
     return x
 
 
-# In[434]:
+# In[864]:
 
 regex = re.compile(r'[0-9]*')
 
@@ -140,9 +140,9 @@ def compute_time_norm(row):
 
 # ### Predict with train
 
-# In[743]:
+# In[850]:
 
-features_cols = ['time_diff'] + ['directors_same'] + ['num_match_stars']
+features_cols = ['time_diff', 'directors_same', 'num_match_stars']
 
 train_data = create_features(train)
 
@@ -157,42 +157,49 @@ train_data = train_data[train_data['id_left'] != 680]
 
 x_train, x_test, y_train, y_test = train_test_split(train_data[features_cols], train_data['gold'])
 
-clf = RandomForestClassifier()
+clf = GradientBoostingClassifier(min_samples_split=10)
 clf.fit(x_train, y_train)
 clf.score(x_test, y_test)
 
 
-# In[744]:
-
-time_cols = ['time_left', 'time_right', 'time_same', 'time_diff', 'time_norm_left', 'time_norm_right']
+# In[857]:
 
 
-# In[745]:
 
-clf = RandomForestClassifier()
-clf.fit(train_data[features_cols], train_data['gold'])
 
-preds = clf.predict(train_data[features_cols])
+# In[855]:
+
+clf = GradientBoostingClassifier(n_estimators=200)
+clf.fit(x_train, y_train)
+preds = clf.predict(x_test)
 
 # Missed preds:
-errors = preds - train_data['gold']
+errors = preds - y_test
 error_ind = np.nonzero(errors)[0]
-train_data.iloc[error_ind]
+
+print(preds[error_ind])
+print(y_test.as_matrix()[error_ind])
+
+rel_cols = ['director_left', 'time_right', 'directors_same', 'time_same', 'time_diff', 'num_match_stars', 'gold']
+x_test.iloc[error_ind]
+
+# from sklearn.metrics import confusion_matrix
+# confusion_matrix(y_test, preds)
 
 
 # ### Predict with test
 
-# In[746]:
+# In[768]:
 
 features_cols = ['time_same'] + ['directors_same'] + ['num_match_stars']
 test_data = create_features(test)
 
-clf = RandomForestClassifier()
+clf = GradientBoostingClassifier(min_samples_split=10)
 clf.fit(train_data[features_cols], train_data['gold'])
 test_preds = clf.predict(test_data[features_cols])
 
 
-# In[747]:
+# In[769]:
 
 test_preds = pd.DataFrame(test_preds)
 test_preds.columns = ['gold']
@@ -201,17 +208,17 @@ test_preds.to_csv('test_gold.csv', index=False)
 
 # ### Predict with Holdout
 
-# In[748]:
+# In[770]:
 
 features_cols = ['time_same'] + ['directors_same'] + ['num_match_stars']
 holdout_data = create_features(holdout)
 
-clf = RandomForestClassifier()
+clf = GradientBoostingClassifier(min_samples_split=10)
 clf.fit(train_data[features_cols], train_data['gold'])
 holdout_preds = clf.predict(holdout_data[features_cols])
 
 
-# In[749]:
+# In[771]:
 
 holdout_preds = pd.DataFrame(holdout_preds)
 holdout_preds.columns = ['gold']
